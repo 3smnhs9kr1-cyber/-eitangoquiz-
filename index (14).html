@@ -1,0 +1,209 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英単語クイズ</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <h1>英単語クイズ</h1>
+        <p>表示される日本語に対応する英単語を解答欄に入力してください。</p>
+        <div id="word-display" class="word-display">
+            <div id="japanese-meaning" class="meaning"></div>
+            <div id="english-word" class="word"></div>
+        </div>
+        <input type="text" id="text-input" class="text-input" autofocus>
+        <div id="feedback-display" class="feedback-display"></div> <!-- 新しいフィードバック表示要素 -->
+        <div class="game-info">
+            <span id="questionCounter">問題: 0問目</span>
+            <span id="currentRangeDisplay">(範囲: 1-277)</span>
+        </div>
+        <div class="range-selection">
+            <label for="startRangeInput">出題範囲:</label>
+            <input type="number" id="startRangeInput" value="1" min="1" max="277">
+            ~
+            <input type="number" id="endRangeInput" value="277" min="1" max="277">
+            <button id="setRangeButton">範囲を設定</button>
+        </div>
+        <div id="score" class="score">スコア: 0</div>
+        <button id="start-button" class="start-button">ゲーム開始</button>
+        <p id="message" class="message"></p>
+    </div>
+    <script>
+        const allWords = [{"en": "mother", "ja": "母"}, {"en": "father", "ja": "父"}, {"en": "grandmother", "ja": "祖母"}, {"en": "grandfather", "ja": "祖父"}, {"en": "brother", "ja": "兄、弟"}, {"en": "sister", "ja": "姉、妹"}, {"en": "cousin", "ja": "いとこ"}, {"en": "teacher", "ja": "先生"}, {"en": "homeroom teacher", "ja": "担任の先生"}, {"en": "friend", "ja": "友達"}, {"en": "new", "ja": "新人の"}, {"en": "old", "ja": "年を取った"}, {"en": "think", "ja": "思う、考える"}, {"en": "name", "ja": "名前"}, {"en": "doctor", "ja": "医者"}, {"en": "nurse", "ja": "看護師"}, {"en": "office worker", "ja": "会社員"}, {"en": "writer", "ja": "作家"}, {"en": "musician", "ja": "音楽家"}, {"en": "police officer", "ja": "警察官"}, {"en": "color", "ja": "色"}, {"en": "hobby", "ja": "趣味"}, {"en": "dream", "ja": "夢"}, {"en": "pen", "ja": "ペン"}, {"en": "eraser", "ja": "消しゴム"}, {"en": "telephone", "ja": "電話"}, {"en": "cell phone", "ja": "携帯電話"}, {"en": "number", "ja": "番号"}, {"en": "number", "ja": "数"}, {"en": "television", "ja": "テレビ"}, {"en": "book", "ja": "～を予約する"}, {"en": "magazine", "ja": "雑誌"}, {"en": "fruit", "ja": "果物"}, {"en": "banana", "ja": "バナナ"}, {"en": "plan", "ja": "計画/～を計画する"}, {"en": "tournament", "ja": "勝ち抜き試合"}, {"en": "goal", "ja": "目標"}, {"en": "goal", "ja": "ゴール"}, {"en": "favorite", "ja": "一番好きな"}, {"en": "road", "ja": "道"}, {"en": "boat", "ja": "ボート"}, {"en": "capital", "ja": "首都"}, {"en": "Sunday", "ja": "日曜日"}, {"en": "Monday", "ja": "月曜日"}, {"en": "Tuesday", "ja": "火曜日"}, {"en": "Wednesday", "ja": "水曜日"}, {"en": "Thursday", "ja": "木曜日"}, {"en": "Friday", "ja": "金曜日"}, {"en": "Saturday", "ja": "土曜日"}, {"en": "January", "ja": "1月"}, {"en": "February", "ja": "2月"}, {"en": "March", "ja": "3月"}, {"en": "April", "ja": "4月"}, {"en": "May", "ja": "5月"}, {"en": "June", "ja": "6月"}, {"en": "July", "ja": "7月"}, {"en": "August", "ja": "8月"}, {"en": "September", "ja": "9月"}, {"en": "October", "ja": "10月"}, {"en": "November", "ja": "11月"}, {"en": "December", "ja": "12月"}, {"en": "water", "ja": "～に水をやる"}, {"en": "idea", "ja": "考え（方）"}, {"en": "box", "ja": "箱"}, {"en": "piano", "ja": "ピアノ"}, {"en": "photo", "ja": "写真（5字）"}, {"en": "photograph", "ja": "写真（10字）"}, {"en": "city", "ja": "都市/市/町"}, {"en": "leaf", "ja": "（木や草の）葉"}, {"en": "roof", "ja": "屋根"}, {"en": "student", "ja": "生徒、学生"}, {"en": "child", "ja": "子供"}, {"en": "foot", "ja": "足"}, {"en": "tooth", "ja": "歯"}, {"en": "ox", "ja": "牛、雄牛"}, {"en": "goose", "ja": "ガチョウ"}, {"en": "fish", "ja": "魚"}, {"en": "sheep", "ja": "羊"}, {"en": "bird", "ja": "鳥"}, {"en": "building", "ja": "建物"}, {"en": "house", "ja": "家"}, {"en": "bench", "ja": "ベンチ"}, {"en": "many", "ja": "多くの、たくさんの（mから）"}, {"en": "a lot of", "ja": "多くの、たくさんの（aから）"}, {"en": "lots of", "ja": "多くの、たくさんの（lから）"}, {"en": "a few", "ja": "少数の、２，３の"}, {"en": "some", "ja": "いくつかの、多少の"}, {"en": "and", "ja": "そして/～と…"}, {"en": "umbrella", "ja": "傘"}, {"en": "hour", "ja": "（単位の）時間"}, {"en": "day", "ja": "（単位の）日"}, {"en": "week", "ja": "週"}, {"en": "month", "ja": "（単位の）月"}, {"en": "college", "ja": "（単科）大学"}, {"en": "university", "ja": "（総合）大学"}, {"en": "question", "ja": "質問"}, {"en": "the United States", "ja": "アメリカ合衆国（3語）"}, {"en": "the United States of America", "ja": "アメリカ合衆国（5語）"}, {"en": "sun", "ja": "太陽（1語）"}, {"en": "moon", "ja": "（衛星の）月（1語）"}, {"en": "earth", "ja": "地球（1語）"}, {"en": "sea", "ja": "海（sから始まる1語）"}, {"en": "sky", "ja": "空"}, {"en": "north", "ja": "北/北の/北に"}, {"en": "south", "ja": "南/南の/南に"}, {"en": "east", "ja": "東/東の/東に"}, {"en": "west", "ja": "西/西の/西に"}, {"en": "example", "ja": "例"}, {"en": "only", "ja": "唯一の"}, {"en": "kind", "ja": "親切な(k)"}, {"en": "kind", "ja": "種類(k)"}, {"en": "sweet", "ja": "甘い(s)"}, {"en": "busy", "ja": "忙しい"}, {"en": "very", "ja": "非常に、とても"}, {"en": "or", "ja": "または/～または…"}, {"en": "in the morning", "ja": "朝に"}, {"en": "in the afternoon", "ja": "午後に"}, {"en": "in the evening", "ja": "晩に（iから）"}, {"en": "at night", "ja": "夜に(aから)"}, {"en": "at home", "ja": "在宅して"}, {"en": "from beginning to end", "ja": "最初から終わりまで"}, {"en": "by mail", "ja": "郵便で"}, {"en": "on foot", "ja": "徒歩で"}, {"en": "sad", "ja": "悲しい"}, {"en": "glad", "ja": "嬉しい"}, {"en": "high", "ja": "高い（h）"}, {"en": "low", "ja": "低い"}, {"en": "light", "ja": "軽い"}, {"en": "light", "ja": "明るい"}, {"en": "light", "ja": "明かり"}, {"en": "heavy", "ja": "重い"}, {"en": "heavy", "ja": "（天候が）激しい"}, {"en": "interesting", "ja": "興味のある"}, {"en": "interesting", "ja": "面白い（i）"}, {"en": "boring", "ja": "退屈させるような"}, {"en": "beautiful", "ja": "美しい"}, {"en": "free", "ja": "無料の"}, {"en": "free", "ja": "ひまな"}, {"en": "free", "ja": "自由な"}, {"en": "pretty", "ja": "かなり"}, {"en": "pretty", "ja": "かわいい（p）"}, {"en": "delicious", "ja": "（とても）おいしい"}, {"en": "Japanese", "ja": "日本の/日本人(の)/日本語(の)"}, {"en": "American", "ja": "アメリカの/アメリカ人(の)"}, {"en": "English", "ja": "イングランドの/英語(の)"}, {"en": "French", "ja": "フランスの/フランス人(の)/フランス語(の)"}, {"en": "German", "ja": "ドイツの/ドイツ人(の)/ドイツ語(の)"}, {"en": "Chinese", "ja": "中国の/中国人(の)/中国語(の)"}, {"en": "Italian", "ja": "イタリアの/イタリア人(の)/イタリア語(の)"}, {"en": "Australian", "ja": "オーストラリアの/オーストラリア人(の)"}, {"en": "actor", "ja": "俳優"}, {"en": "actress", "ja": "女優"}, {"en": "cook", "ja": "料理人"}, {"en": "cook", "ja": "～を料理する"}, {"en": "essay", "ja": "随筆"}, {"en": "story", "ja": "話、物語"}, {"en": "beauty", "ja": "美"}, {"en": "France", "ja": "フランス"}, {"en": "Germany", "ja": "ドイツ"}, {"en": "Australia", "ja": "オーストラリア"}, {"en": "Italy", "ja": "イタリア"}, {"en": "act", "ja": "演じる"}, {"en": "rice cooker", "ja": "炊飯器"}, {"en": "shef", "ja": "料理長"}, {"en": "happy", "ja": "うれしい、幸せな"}, {"en": "angry", "ja": "怒っている"}, {"en": "thirsty", "ja": "のどが渇いている"}, {"en": "scared", "ja": "怖がっている"}, {"en": "sad", "ja": "悲しい"}, {"en": "hungry", "ja": "お腹がすいている"}, {"en": "sleepy", "ja": "眠い"}, {"en": "tired", "ja": "疲れている"}, {"en": "good", "ja": "よい、おいしい"}, {"en": "bad", "ja": "わるい、ひどい"}, {"en": "big", "ja": "大きい(littleの対義語)"}, {"en": "little", "ja": "小さい(lから)"}, {"en": "large", "ja": "大きい(lから)"}, {"en": "small", "ja": "小さい(large・bigの対義語)"}, {"en": "long", "ja": "長い"}, {"en": "short", "ja": "短い、背の低い"}, {"en": "short", "ja": "背の低い（5字）"}, {"en": "old", "ja": "古い、年取った"}, {"en": "new", "ja": "新しい、新人の"}, {"en": "light", "ja": "軽い、明るい"}, {"en": "heavy", "ja": "重い、（天候・交通量が）激しい"}, {"en": "slow", "ja": "ゆっくりの"}, {"en": "fast", "ja": "速い"}, {"en": "noisy", "ja": "うるさい(n)"}, {"en": "quiet", "ja": "静かな"}, {"en": "right", "ja": "正しい、右の"}, {"en": "wrong", "ja": "間違っている"}, {"en": "dirty", "ja": "汚い"}, {"en": "beautiful", "ja": "美しい"}, {"en": "fat", "ja": "太った"}, {"en": "tall", "ja": "背の高い"}, {"en": "strong", "ja": "強い"}, {"en": "delicious", "ja": "とてもおいしい"}, {"en": "excited", "ja": "わくわくした"}, {"en": "bored", "ja": "退屈した"}, {"en": "surprised", "ja": "驚いた"}, {"en": "zero", "ja": "0(zから)"}, {"en": "oh", "ja": "0(oから)"}, {"en": "one", "ja": "1"}, {"en": "two", "ja": "2"}, {"en": "three", "ja": "3"}, {"en": "four", "ja": "4"}, {"en": "five", "ja": "5"}, {"en": "six", "ja": "6"}, {"en": "seven", "ja": "7"}, {"en": "eight", "ja": "8"}, {"en": "nine", "ja": "9"}, {"en": "ten", "ja": "10"}, {"en": "eleven", "ja": "11"}, {"en": "twelve", "ja": "12"}, {"en": "thirteen", "ja": "13"}, {"en": "fourteen", "ja": "14"}, {"en": "fifteen", "ja": "15"}, {"en": "sixteen", "ja": "16"}, {"en": "seventeen", "ja": "17"}, {"en": "eighteen", "ja": "18"}, {"en": "nineteen", "ja": "19"}, {"en": "twenty", "ja": "20"}, {"en": "twenty-one", "ja": "21"}, {"en": "thirty-two", "ja": "32"}, {"en": "forty-three", "ja": "43"}, {"en": "forty-four", "ja": "44"}, {"en": "fifty-five", "ja": "55"}, {"en": "sixty-six", "ja": "66"}, {"en": "seventy-seven", "ja": "77"}, {"en": "eighty-eight", "ja": "88"}, {"en": "ninety-nine", "ja": "99"}, {"en": "one hundred", "ja": "100"}, {"en": "one hundred one", "ja": "101(3語)"}, {"en": "one hundred and one", "ja": "101(4語)"}, {"en": "one thousand", "ja": "1000"}, {"en": "first", "ja": "1番目の"}, {"en": "second", "ja": "2番目の"}, {"en": "third", "ja": "3番目の"}, {"en": "fourth", "ja": "4番目の"}, {"en": "fifth", "ja": "5番目の"}, {"en": "sixth", "ja": "6番目の"}, {"en": "seventh", "ja": "7番目の"}, {"en": "eighth", "ja": "8番目の"}, {"en": "ninth", "ja": "9番目の"}, {"en": "tenth", "ja": "10番目の"}, {"en": "eleventh", "ja": "11番目の"}, {"en": "twelfth", "ja": "12番目の"}, {"en": "thirteenth", "ja": "13番目の"}, {"en": "fourteenth", "ja": "14番目の"}, {"en": "fifteenth", "ja": "15番目の"}, {"en": "sixteenth", "ja": "16番目の"}, {"en": "seventeenth", "ja": "17番目の"}, {"en": "eighteenth", "ja": "18番目の"}, {"en": "nineteenth", "ja": "19番目の"}, {"en": "twentieth", "ja": "20番目の"}, {"en": "twenty-first", "ja": "21番目の"}, {"en": "thirty-second", "ja": "32番目の"}, {"en": "forty-third", "ja": "43番目の"}, {"en": "forty-fourth", "ja": "44番目の"}, {"en": "fifty-fifth", "ja": "55番目の"}, {"en": "sixty-sixth", "ja": "66番目の"}, {"en": "seventy-seventh", "ja": "77番目の"}, {"en": "eighty-eighth", "ja": "88番目の"}, {"en": "ninety-ninth", "ja": "99番目の"}, {"en": "thirtieth", "ja": "30番目の"}, {"en": "fortieth", "ja": "40番目の"}, {"en": "fiftieth", "ja": "50番目の"}, {"en": "sixtieth", "ja": "60番目の"}, {"en": "seventieth", "ja": "70番目の"}, {"en": "eightieth", "ja": "80番目の"}, {"en": "ninetieth", "ja": "90番目の"}, {"en": "hundredth", "ja": "100番目の(1語)"}, {"en": "one hundredth", "ja": "100番目の(2語)"}, {"en": "one hundred first", "ja": "101番目の(3語)"}, {"en": "one hundred and first", "ja": "101番目の(4語)"}, {"en": "two hundredth", "ja": "200番目の"}, {"en": "one thousandth", "ja": "1000番目の"}];
+        const totalWordsLength = allWords.length; // 全単語数
+        let currentWordIndex = 0; // Now represents questions answered
+        let score = 0;
+        let gameStarted = false;
+        let currentWordStage = 0; // 0: Japanese only, waiting for first Enter; 1: English revealed, waiting for second Enter
+        let currentQuestionData = null; // Store the current word object {en, ja}
+        let effectiveStartRange = 0; // 0-based index for filtering
+        let effectiveEndRange = totalWordsLength - 1; // 0-based index for filtering
+
+        const japaneseMeaningDisplay = document.getElementById('japanese-meaning');
+        const englishWordDisplay = document.getElementById('english-word');
+        const textInput = document.getElementById('text-input');
+        const scoreDisplay = document.getElementById('score');
+        const startButton = document.getElementById('start-button');
+        const messageDisplay = document.getElementById('message');
+        const feedbackDisplay = document.getElementById('feedback-display');
+        const questionCounter = document.getElementById('questionCounter');
+        const currentRangeDisplay = document.getElementById('currentRangeDisplay');
+        const startRangeInput = document.getElementById('startRangeInput');
+        const endRangeInput = document.getElementById('endRangeInput');
+        const setRangeButton = document.getElementById('setRangeButton');
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function showFeedback(type) {
+            feedbackDisplay.classList.remove('correct-feedback', 'incorrect-feedback');
+            if (type === 'correct') {
+                feedbackDisplay.textContent = '〇';
+                feedbackDisplay.classList.add('correct-feedback');
+            } else if (type === 'incorrect') {
+                feedbackDisplay.textContent = '✕';
+                feedbackDisplay.classList.add('incorrect-feedback');
+            }
+        }
+
+        function updateRangeDisplay() {
+            currentRangeDisplay.textContent = `(範囲: ${effectiveStartRange + 1}-${effectiveEndRange + 1})`;
+        }
+
+        function setQuestionRange() {
+            let startVal = parseInt(startRangeInput.value, 10);
+            let endVal = parseInt(endRangeInput.value, 10);
+
+            if (isNaN(startVal) || startVal < 1) startVal = 1;
+            if (isNaN(endVal) || endVal > totalWordsLength) endVal = totalWordsLength;
+
+            if (startVal > endVal) {
+                [startVal, endVal] = [endVal, startVal]; // Swap if start is greater than end
+            }
+
+            effectiveStartRange = startVal - 1; // Convert to 0-based index
+            effectiveEndRange = endVal - 1; // Convert to 0-based index
+
+            startRangeInput.value = startVal;
+            endRangeInput.value = endVal;
+            updateRangeDisplay();
+        }
+
+        function startGame() {
+            gameStarted = true;
+            score = 0;
+            currentWordIndex = 0;
+            scoreDisplay.textContent = `スコア: ${score}`;
+            textInput.value = '';
+            textInput.focus();
+            startButton.style.display = 'none';
+            messageDisplay.textContent = '';
+            feedbackDisplay.textContent = '';
+            textInput.disabled = false; // 入力を有効化
+
+            setQuestionRange(); // ゲーム開始時に現在の範囲を適用
+            questionCounter.textContent = `問題: ${currentWordIndex}問目`;
+            displayNextWord();
+        }
+
+        function displayNextWord() {
+            const availableWords = allWords.slice(effectiveStartRange, effectiveEndRange + 1);
+            if (availableWords.length === 0) {
+                englishWordDisplay.textContent = '設定された範囲に問題がありません。';
+                textInput.disabled = true;
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * availableWords.length);
+            currentQuestionData = availableWords[randomIndex]; // ランダムに単語を選択
+
+            japaneseMeaningDisplay.textContent = currentQuestionData.ja;
+            englishWordDisplay.textContent = ''; // 英単語は最初非表示
+            textInput.value = ''; // 新しい単語のために入力欄をクリア
+            feedbackDisplay.textContent = ''; // 前の問題のフィードバックをクリア
+            textInput.disabled = false; // 入力可能にする
+            currentWordStage = 0; // ステージを初期状態にリセット
+            textInput.focus();
+
+            questionCounter.textContent = `問題: ${currentWordIndex + 1}問目`; // 1からカウント
+        }
+
+        function endGame() {
+            gameStarted = false;
+            japaneseMeaningDisplay.textContent = '';
+            englishWordDisplay.textContent = 'ゲーム終了！';
+            textInput.value = '';
+            textInput.disabled = true;
+            startButton.style.display = 'block';
+            startButton.textContent = 'もう一度プレイ';
+            messageDisplay.textContent = `最終スコア: ${score}点です！`;
+            feedbackDisplay.textContent = '';
+            currentQuestionData = null; // ゲーム終了時にデータをリセット
+            questionCounter.textContent = `問題: ${currentWordIndex}問目`;
+        }
+
+        startButton.addEventListener('click', () => {
+            startGame();
+        });
+
+        setRangeButton.addEventListener('click', () => {
+            setQuestionRange();
+            if (gameStarted) {
+                 displayNextWord(); // 範囲変更後、次の問題を表示
+            }
+        });
+
+        // keydownイベントリスナーをdocumentに移動
+        document.addEventListener('keydown', (event) => {
+            if (!gameStarted) return;
+
+            if (event.key === 'Enter') {
+                event.preventDefault(); // デフォルトのフォーム送信動作を防止
+
+                if (currentWordStage === 0) {
+                    // 日本語訳が表示されている状態（初回Enter）
+                    const typedText = textInput.value.trim();
+                    const currentTargetWord = currentQuestionData.en; // 現在の問題の英単語を使用
+
+                    if (typedText === currentTargetWord) {
+                        showFeedback('correct');
+                        score++;
+                        scoreDisplay.textContent = `スコア: ${score}`;
+                    } else {
+                        showFeedback('incorrect');
+                    }
+
+                    japaneseMeaningDisplay.textContent = ''; // 日本語訳をクリア
+                    englishWordDisplay.textContent = currentTargetWord; // 正しい英単語を表示
+                    textInput.value = ''; // 入力フィールドをクリア
+                    textInput.disabled = true; // 入力を無効化（次のEnterまで）
+
+                    currentWordStage = 1; // ステージを1に移行
+
+                } else if (currentWordStage === 1) {
+                    // 英単語とフィードバックが表示されている状態（2回目Enter）
+                    feedbackDisplay.textContent = ''; // フィードバックをクリア
+                    currentWordIndex++; // 出題数をインクリメント
+                    displayNextWord(); // 次の単語へ
+                }
+            }
+        });
+
+        // 初期状態
+        japaneseMeaningDisplay.textContent = '';
+        englishWordDisplay.textContent = 'ゲーム開始ボタンを押してください';
+        textInput.disabled = true;
+        updateRangeDisplay(); // 初期範囲表示
+
+    </script>
+</body>
+</html>
